@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deepak Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0e0e16;--bg2:#13131f;--bg3:#1a1a2e;
+  --accent:#7c3aed;--accent2:#a855f7;--accent3:#c084fc;
+  --gold:#f59e0b;--gold2:#fbbf24;--teal:#06b6d4;--teal2:#22d3ee;
+  --rose:#f43f5e;--green:#10b981;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --border:rgba(124,58,237,0.2);--border2:rgba(124,58,237,0.4);
+  --radius:16px;--radius-sm:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:10px;}
+.bg-glow{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.bg-glow::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,0.08) 0%,transparent 70%);top:-100px;left:-100px;animation:float1 20s ease-in-out infinite;}
+.bg-glow::after{content:'';position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,0.06) 0%,transparent 70%);bottom:-50px;right:-50px;animation:float2 15s ease-in-out infinite;}
+@keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(80px,60px);}}
+@keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-60px,-40px);}}
+.app{display:flex;height:100vh;position:relative;z-index:1;}
+.sidebar{width:280px;min-width:280px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:all 0.3s ease;overflow:hidden;}
+.sidebar.collapsed{width:0;min-width:0;}
+.sidebar-header{padding:24px 20px 20px;border-bottom:1px solid var(--border);}
+.app-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--teal));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.logo-text{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--accent3),var(--teal2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.btn-new-course{width:100%;padding:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:var(--radius-sm);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.3s;}
+.btn-new-course:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(124,58,237,0.4);}
+.sidebar-search{padding:12px 20px;border-bottom:1px solid var(--border);}
+.search-wrap{position:relative;}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;z-index:1;}
+.search-input{width:100%;padding:8px 12px 8px 34px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;}
+.search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+.courses-list{flex:1;overflow-y:auto;padding:12px;}
+.courses-list-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;padding:0 8px 10px;}
+.course-item{border-radius:var(--radius-sm);margin-bottom:4px;}
+.course-header{padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s;border-radius:8px;}
+.course-header:hover{background:rgba(124,58,237,0.1);}
+.course-header.active{background:rgba(124,58,237,0.15);border-left:3px solid var(--accent);}
+.course-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.course-name{font-size:13px;font-weight:600;flex:1;color:var(--text);}
+.course-arrow{font-size:10px;color:var(--text3);transition:transform 0.3s;}
+.course-arrow.open{transform:rotate(90deg);}
+.units-list{padding:0 0 4px 22px;display:none;}
+.units-list.open{display:block;}
+.unit-item{padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2);border-radius:6px;transition:all 0.2s;display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+.unit-item:hover{background:rgba(124,58,237,0.08);color:var(--text);}
+.unit-item.active{background:rgba(124,58,237,0.15);color:var(--accent3);font-weight:600;}
+.unit-dot{width:5px;height:5px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.unit-item.active .unit-dot{background:var(--accent3);}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);}
+.stats-row{display:flex;gap:16px;}
+.stat-item{flex:1;text-align:center;}
+.stat-num{font-size:18px;font-weight:700;color:var(--accent3);}
+.stat-label{font-size:10px;color:var(--text3);}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:16px 28px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.btn-toggle{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;padding:8px 10px;font-size:16px;transition:all 0.2s;}
+.btn-toggle:hover{background:rgba(124,58,237,0.15);border-color:var(--border2);color:var(--text);}
+.breadcrumb{flex:1;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);}
+.breadcrumb span{color:var(--accent3);font-weight:600;}
+.topbar-actions{display:flex;align-items:center;gap:10px;}
+.btn-action{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;gap:6px;}
+.btn-outline{background:none;border:1px solid var(--border2);color:var(--text2);}
+.btn-outline:hover{background:rgba(124,58,237,0.1);color:var(--text);border-color:var(--accent);}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(124,58,237,0.4);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;color:#1a1200;font-weight:700;}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(245,158,11,0.4);}
+.btn-teal{background:linear-gradient(135deg,var(--teal),var(--teal2));border:none;color:#001a20;}
+.btn-teal:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(6,182,212,0.4);}
+.content-area{flex:1;overflow-y:auto;padding:32px 40px;}
+.welcome{text-align:center;padding:80px 40px;animation:fadeInUp 0.6s ease;}
+.welcome-icon{font-size:64px;margin-bottom:24px;animation:floatIcon 3s ease-in-out infinite;}
+@keyframes floatIcon{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.welcome h1{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;background:linear-gradient(135deg,var(--accent3),var(--teal2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px;}
+.welcome p{font-size:16px;color:var(--text2);margin-bottom:40px;max-width:500px;margin-left:auto;margin-right:auto;}
+.welcome-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:700px;margin:0 auto;}
+.welcome-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:all 0.3s;text-align:left;}
+.welcome-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 30px rgba(124,58,237,0.2);}
+.wc-icon{font-size:28px;margin-bottom:12px;}
+.wc-title{font-size:14px;font-weight:700;margin-bottom:6px;}
+.wc-desc{font-size:12px;color:var(--text3);}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.unit-view{animation:fadeInUp 0.4s ease;}
+.unit-title-bar{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.unit-title-text{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;}
+.unit-meta{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+.unit-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;}
+.badge-purple{background:rgba(124,58,237,0.15);color:var(--accent3);border:1px solid rgba(124,58,237,0.3);}
+.badge-teal{background:rgba(6,182,212,0.15);color:var(--teal2);border:1px solid rgba(6,182,212,0.3);}
+.badge-gold{background:rgba(245,158,11,0.15);color:var(--gold2);border:1px solid rgba(245,158,11,0.3);}
+.topics-section{margin-bottom:28px;}
+.section-label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:14px;}
+.topics-tags{display:flex;flex-wrap:wrap;gap:8px;}
+.topic-tag{padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.2s;}
+.topic-tag:hover,.topic-tag.active{background:rgba(124,58,237,0.15);border-color:var(--accent);color:var(--accent3);}
+.add-topic-btn{padding:6px 14px;background:none;border:1px dashed var(--text3);border-radius:20px;font-size:12px;color:var(--text3);cursor:pointer;transition:all 0.2s;font-family:'Plus Jakarta Sans',sans-serif;}
+.add-topic-btn:hover{border-color:var(--accent);color:var(--accent3);}
+.editor-container{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
+.editor-toolbar{padding:12px 16px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.tb-group{display:flex;align-items:center;gap:2px;padding:0 6px;border-right:1px solid var(--border);}
+.tb-group:last-child{border-right:none;}
+.tb-btn{min-width:30px;height:30px;background:none;border:none;border-radius:6px;color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;padding:0 6px;}
+.tb-btn:hover{background:rgba(124,58,237,0.15);color:var(--text);}
+.tb-select{padding:4px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+.tb-select:focus{outline:none;border-color:var(--accent);}
+.color-btns{display:flex;gap:4px;align-items:center;}
+.color-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all 0.2s;}
+.color-btn:hover{border-color:#fff;transform:scale(1.2);}
+.editor-body{min-height:400px;padding:24px 28px;outline:none;font-size:15px;line-height:1.8;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;}
+.editor-body:empty::before{content:attr(data-placeholder);color:var(--text3);pointer-events:none;}
+.editor-body h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;margin:20px 0 12px;background:linear-gradient(135deg,var(--accent3),var(--teal2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.editor-body h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin:18px 0 10px;color:var(--gold2);}
+.editor-body h3{font-size:17px;font-weight:700;margin:14px 0 8px;color:var(--teal2);}
+.editor-body p{margin-bottom:12px;}
+.editor-body ul,.editor-body ol{margin:12px 0 12px 24px;}
+.editor-body li{margin-bottom:6px;}
+.editor-body blockquote{border-left:4px solid var(--accent);padding:12px 20px;background:rgba(124,58,237,0.08);border-radius:0 8px 8px 0;margin:16px 0;color:var(--text2);font-style:italic;}
+.editor-body code{font-family:'JetBrains Mono',monospace;font-size:13px;background:rgba(124,58,237,0.12);padding:2px 6px;border-radius:4px;color:var(--accent3);}
+.editor-body pre{background:#1e1e2e;border:1px solid rgba(124,58,237,0.3);border-radius:10px;padding:20px;margin:16px 0;overflow-x:auto;}
+.editor-body pre code{background:none;padding:0;color:#cdd6f4;font-size:13px;line-height:1.7;}
+.editor-body .hl-yellow{background:rgba(251,191,36,0.25);padding:2px 4px;border-radius:3px;}
+.editor-body .hl-green{background:rgba(16,185,129,0.25);padding:2px 4px;border-radius:3px;}
+.editor-body .hl-pink{background:rgba(244,63,94,0.25);padding:2px 4px;border-radius:3px;}
+.editor-body strong{color:var(--text);font-weight:700;}
+.editor-body em{color:var(--text2);}
+.editor-body hr{border:none;border-top:1px solid var(--border2);margin:20px 0;}
+.editor-body table{width:100%;border-collapse:collapse;margin:16px 0;}
+.editor-body th{background:rgba(124,58,237,0.2);padding:10px 14px;text-align:left;font-size:13px;font-weight:700;color:var(--accent3);}
+.editor-body td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.editor-body tr:hover td{background:rgba(124,58,237,0.05);}
+.status-bar{padding:8px 16px;background:var(--bg3);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text3);}
+.status-saved{color:var(--green);display:flex;align-items:center;gap:4px;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:24px;}
+.feature-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all 0.3s;cursor:pointer;}
+.feature-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,0.15);}
+.fc-icon{font-size:24px;margin-bottom:10px;}
+.fc-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.fc-desc{font-size:11px;color:var(--text3);}
+.course-overview{animation:fadeInUp 0.4s ease;}
+.co-title{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;margin-bottom:8px;}
+.co-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
+.co-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;}
+.co-stat-num{font-size:28px;font-weight:700;color:var(--accent3);font-family:'JetBrains Mono',monospace;}
+.co-stat-label{font-size:12px;color:var(--text3);margin-top:4px;}
+.units-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.unit-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;}
+.unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--teal));}
+.unit-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 30px rgba(124,58,237,0.2);}
+.uc-icon{font-size:24px;margin-bottom:10px;}
+.uc-name{font-size:14px;font-weight:700;margin-bottom:6px;}
+.uc-topics{font-size:11px;color:var(--text3);}
+.uc-progress{margin-top:12px;height:4px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.uc-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--teal));border-radius:4px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;}
+.modal-overlay.hidden{display:none;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:32px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:slideUp 0.3s ease;}
+.modal-wide{width:580px;}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.modal h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:20px;background:linear-gradient(135deg,var(--accent3),var(--teal2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.modal-label{font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+.modal-input{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:18px;transition:border-color 0.2s;}
+.modal-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15);}
+textarea.modal-input{resize:vertical;}
+.color-picker{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.cp-btn{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all 0.2s;}
+.cp-btn.selected,.cp-btn:hover{border-color:#fff;transform:scale(1.15);}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;}
+.btn-cancel{padding:10px 20px;background:none;border:1px solid var(--border2);border-radius:10px;color:var(--text2);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;transition:all 0.2s;}
+.btn-cancel:hover{background:var(--bg3);}
+.btn-confirm{padding:10px 24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;transition:all 0.2s;}
+.btn-confirm:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(124,58,237,0.4);}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--green);color:#fff;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(16,185,129,0.4);}
+.toast.error{background:var(--rose);box-shadow:0 8px 24px rgba(244,63,94,0.4);}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.pomodoro{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:16px;display:flex;align-items:center;gap:16px;}
+.pomo-circle{width:56px;height:56px;border-radius:50%;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.pomo-info{flex:1;}
+.pomo-title{font-size:12px;font-weight:700;margin-bottom:2px;color:var(--text2);}
+.pomo-time{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--teal2);}
+.pomo-btns{display:flex;gap:8px;}
+.pomo-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;}
+.pomo-start{background:var(--green);color:#fff;}
+.pomo-reset{background:var(--bg2);color:var(--text2);border:1px solid var(--border);}
+.pdf-loading{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.pdf-loading.hidden{display:none;}
+.pdf-spinner{width:40px;height:40px;border:4px solid var(--bg3);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.pdf-loading p{color:var(--text2);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="app">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="app-logo">
+        <div class="logo-icon">📚</div>
+        <div class="logo-text">Deepak Notes</div>
+      </div>
+      <button class="btn-new-course" id="btnNewCourse">+ New Course</button>
+    </div>
+    <div class="sidebar-search">
+      <div class="search-wrap">
+        <input class="search-input" type="text" id="searchInput" placeholder="Search notes...">
+      </div>
+    </div>
+    <div class="courses-list">
+      <div class="courses-list-label">My Courses</div>
+      <div id="coursesList"></div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="stats-row">
+        <div class="stat-item"><div class="stat-num" id="statCourses">0</div><div class="stat-label">Courses</div></div>
+        <div class="stat-item"><div class="stat-num" id="statUnits">0</div><div class="stat-label">Units</div></div>
+        <div class="stat-item"><div class="stat-num" id="statWords">0</div><div class="stat-label">Words</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="btn-toggle" id="btnToggle">☰</button>
+      <div class="breadcrumb" id="breadcrumb"><span>📚 Deepak Notes</span></div>
+      <div class="topbar-actions" id="topbarActions">
+        <button class="btn-action btn-outline" id="btnTopCourse">+ Course</button>
+      </div>
+    </div>
+    <div class="content-area" id="contentArea"></div>
+  </div>
+</div>
+
+<!-- Course Modal -->
+<div class="modal-overlay hidden" id="courseModal">
+  <div class="modal">
+    <h3>✨ Create New Course</h3>
+    <div class="modal-label">Course Name</div>
+    <input class="modal-input" id="courseNameInput" placeholder="e.g. Data Structures & Algorithms" maxlength="50">
+    <div class="modal-label">Choose Color</div>
+    <div class="color-picker" id="coursePicker">
+      <div class="cp-btn selected" style="background:#7c3aed" data-color="#7c3aed"></div>
+      <div class="cp-btn" style="background:#06b6d4" data-color="#06b6d4"></div>
+      <div class="cp-btn" style="background:#f59e0b" data-color="#f59e0b"></div>
+      <div class="cp-btn" style="background:#f43f5e" data-color="#f43f5e"></div>
+      <div class="cp-btn" style="background:#10b981" data-color="#10b981"></div>
+      <div class="cp-btn" style="background:#3b82f6" data-color="#3b82f6"></div>
+      <div class="cp-btn" style="background:#ec4899" data-color="#ec4899"></div>
+      <div class="cp-btn" style="background:#f97316" data-color="#f97316"></div>
+    </div>
+    <div class="modal-label">Icon (Emoji)</div>
+    <input class="modal-input" id="courseIconInput" placeholder="🎓" maxlength="2" style="font-size:22px;text-align:center;width:80px;">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelCourse">Cancel</button>
+      <button class="btn-confirm" id="confirmCourse">Create Course</button>
+    </div>
+  </div>
+</div>
+
+<!-- Unit Modal -->
+<div class="modal-overlay hidden" id="unitModal">
+  <div class="modal">
+    <h3>📂 Add New Unit</h3>
+    <div class="modal-label">Unit / Chapter Name</div>
+    <input class="modal-input" id="unitNameInput" placeholder="e.g. Chapter 1: Arrays" maxlength="60">
+    <div class="modal-label">Description (optional)</div>
+    <input class="modal-input" id="unitDescInput" placeholder="Brief description..." maxlength="100">
+    <div class="modal-label">Icon</div>
+    <input class="modal-input" id="unitIconInput" placeholder="📖" maxlength="2" style="font-size:22px;text-align:center;width:80px;">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelUnit">Cancel</button>
+      <button class="btn-confirm" id="confirmUnit">Add Unit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Topic Modal -->
+<div class="modal-overlay hidden" id="topicModal">
+  <div class="modal">
+    <h3>🏷️ Add Topic</h3>
+    <div class="modal-label">Topic Name</div>
+    <input class="modal-input" id="topicInput" placeholder="e.g. Time Complexity" maxlength="40">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelTopic">Cancel</button>
+      <button class="btn-confirm" id="confirmTopic">Add Topic</button>
+    </div>
+  </div>
+</div>
+
+<!-- Code Modal -->
+<div class="modal-overlay hidden" id="codeModal">
+  <div class="modal modal-wide">
+    <h3>💻 Insert Code Block</h3>
+    <div class="modal-label">Language</div>
+    <select class="modal-input" id="codeLangInput" style="cursor:pointer;">
+      <option value="javascript">JavaScript</option>
+      <option value="python">Python</option>
+      <option value="java">Java</option>
+      <option value="cpp">C++</option>
+      <option value="c">C</option>
+      <option value="html">HTML</option>
+      <option value="css">CSS</option>
+      <option value="sql">SQL</option>
+      <option value="bash">Bash / Shell</option>
+      <option value="typescript">TypeScript</option>
+      <option value="rust">Rust</option>
+      <option value="go">Go</option>
+    </select>
+    <div class="modal-label">Code</div>
+    <textarea class="modal-input" id="codeInput" rows="8" placeholder="Paste or type your code here..." style="font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical;"></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelCode">Cancel</button>
+      <button class="btn-confirm" id="confirmCode">Insert Code</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay hidden" id="deleteModal">
+  <div class="modal">
+    <h3>🗑️ Confirm Delete</h3>
+    <p style="color:var(--text2);margin-bottom:20px;font-size:14px;" id="deleteModalText">Are you sure?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelDelete">Cancel</button>
+      <button class="btn-confirm" style="background:linear-gradient(135deg,#f43f5e,#e11d48);" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="pdf-loading hidden" id="pdfLoading">
+  <div class="pdf-spinner"></div>
+  <p>Generating PDF...</p>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────
+var db = JSON.parse(localStorage.getItem('deepakNotes2') || '{"courses":[]}');
+var currentCourse = null;
+var currentUnit   = null;
+var selectedColor = '#7c3aed';
+var pendingCourseId = null;
+var deleteCallback  = null;
+var autosaveTimer   = null;
+var pomodoroSecs    = 25 * 60;
+var pomodoroRunning = false;
+var pomodoroInterval = null;
+
+function saveDB() {
+  localStorage.setItem('deepakNotes2', JSON.stringify(db));
+  updateStats();
+}
+
+// ── BOOT ──────────────────────────────────────────────────
+function init() {
+  bindStaticEvents();
+  seedDemoIfEmpty();
+  renderSidebar();
+  updateStats();
+  showWelcome();
+  if (db.courses.length > 0) selectCourse(db.courses[0].id);
+}
+
+// ── STATIC EVENT BINDINGS ─────────────────────────────────
+function bindStaticEvents() {
+  // sidebar toggle
+  document.getElementById('btnToggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  });
+
+  // search
+  document.getElementById('searchInput').addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('.course-item').forEach(function(el) {
+      var name = el.querySelector('.course-name').textContent.toLowerCase();
+      el.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+
+  // top course button
+  document.getElementById('btnNewCourse').addEventListener('click', openCourseModal);
+  document.getElementById('btnTopCourse').addEventListener('click', openCourseModal);
+
+  // course modal
+  document.getElementById('cancelCourse').addEventListener('click', function() { closeModal('courseModal'); });
+  document.getElementById('confirmCourse').addEventListener('click', createCourse);
+  document.getElementById('courseNameInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') createCourse(); });
+  document.querySelectorAll('#coursePicker .cp-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#coursePicker .cp-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      selectedColor = btn.dataset.color;
+    });
+  });
+
+  // unit modal
+  document.getElementById('cancelUnit').addEventListener('click', function() { closeModal('unitModal'); });
+  document.getElementById('confirmUnit').addEventListener('click', createUnit);
+  document.getElementById('unitNameInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') createUnit(); });
+
+  // topic modal
+  document.getElementById('cancelTopic').addEventListener('click', function() { closeModal('topicModal'); });
+  document.getElementById('confirmTopic').addEventListener('click', addTopic);
+  document.getElementById('topicInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') addTopic(); });
+
+  // code modal
+  document.getElementById('cancelCode').addEventListener('click', function() { closeModal('codeModal'); });
+  document.getElementById('confirmCode').addEventListener('click', insertCodeBlock);
+
+  // delete modal
+  document.getElementById('cancelDelete').addEventListener('click', function() { closeModal('deleteModal'); });
+
+  // close modals on backdrop click
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) overlay.classList.add('hidden');
+    });
+  });
+
+  // keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openCourseModal(); }
+  });
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ── SIDEBAR ───────────────────────────────────────────────
+function renderSidebar() {
+  var list = document.getElementById('coursesList');
+  list.innerHTML = '';
+  db.courses.forEach(function(course) {
+    var item = document.createElement('div');
+    item.className = 'course-item';
+
+    var isActiveCourse = currentCourse && currentCourse.id === course.id;
+    var units = course.units || [];
+
+    var unitsHtml = units.map(function(u) {
+      var isActiveUnit = currentUnit && currentUnit.id === u.id;
+      return '<div class="unit-item' + (isActiveUnit ? ' active' : '') + '" data-cid="' + course.id + '" data-uid="' + u.id + '">'
+        + '<div class="unit-dot"></div>'
+        + '<span>' + (u.icon || '📖') + ' ' + escHtml(u.name) + '</span>'
+        + '</div>';
+    }).join('');
+
+    item.innerHTML = '<div class="course-header' + (isActiveCourse ? ' active' : '') + '" data-cid="' + course.id + '">'
+      + '<span style="font-size:16px;">' + (course.icon || '📚') + '</span>'
+      + '<div class="course-dot" style="background:' + course.color + '"></div>'
+      + '<div class="course-name">' + escHtml(course.name) + '</div>'
+      + '<div class="course-arrow' + (isActiveCourse ? ' open' : '') + '">▶</div>'
+      + '</div>'
+      + '<div class="units-list' + (isActiveCourse ? ' open' : '') + '" id="units_' + course.id + '">'
+      + unitsHtml
+      + '<div class="unit-item add-unit-btn" data-cid="' + course.id + '" style="color:var(--text3);font-style:italic;">'
+      + '<div class="unit-dot" style="background:transparent;border:1px dashed var(--text3);"></div>'
+      + '<span>+ Add Unit</span>'
+      + '</div>'
+      + '</div>';
+
+    list.appendChild(item);
+  });
+
+  // bind sidebar clicks (delegation)
+  list.querySelectorAll('.course-header').forEach(function(el) {
+    el.addEventListener('click', function() { selectCourse(el.dataset.cid); });
+  });
+  list.querySelectorAll('.unit-item:not(.add-unit-btn)').forEach(function(el) {
+    el.addEventListener('click', function() { selectUnit(el.dataset.cid, el.dataset.uid); });
+  });
+  list.querySelectorAll('.add-unit-btn').forEach(function(el) {
+    el.addEventListener('click', function() { openUnitModal(el.dataset.cid); });
+  });
+}
+
+function updateStats() {
+  var courses = db.courses.length;
+  var units   = db.courses.reduce(function(a, c) { return a + (c.units || []).length; }, 0);
+  var words   = 0;
+  db.courses.forEach(function(c) {
+    (c.units || []).forEach(function(u) {
+      if (u.content) words += u.content.replace(/<[^>]+>/g, '').trim().split(/\s+/).filter(Boolean).length;
+    });
+  });
+  document.getElementById('statCourses').textContent = courses;
+  document.getElementById('statUnits').textContent   = units;
+  document.getElementById('statWords').textContent   = words > 999 ? (words / 1000).toFixed(1) + 'k' : words;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────
+function selectCourse(id) {
+  currentCourse = db.courses.find(function(c) { return c.id === id; });
+  currentUnit   = null;
+  renderSidebar();
+  showCourseOverview();
+}
+
+function selectUnit(cid, uid) {
+  currentCourse = db.courses.find(function(c) { return c.id === cid; });
+  currentUnit   = currentCourse.units.find(function(u) { return u.id === uid; });
+  renderSidebar();
+  showUnitView();
+}
+
+// ── VIEWS ─────────────────────────────────────────────────
+function showWelcome() {
+  document.getElementById('breadcrumb').innerHTML = '<span>📚 Deepak Notes</span>';
+  document.getElementById('topbarActions').innerHTML = '<button class="btn-action btn-outline" id="btnTopCourse2">+ Course</button>';
+  document.getElementById('btnTopCourse2').addEventListener('click', openCourseModal);
+  var ca = document.getElementById('contentArea');
+  ca.innerHTML = ''
+    + '<div class="welcome">'
+    + '<div class="welcome-icon">📖</div>'
+    + '<h1>Deepak Notes</h1>'
+    + '<p>Your personal knowledge hub. Organize courses, write beautifully structured notes, and learn smarter.</p>'
+    + '<div class="welcome-cards">'
+    + '<div class="welcome-card" id="wc1"><div class="wc-icon">🎓</div><div class="wc-title">Create a Course</div><div class="wc-desc">Organize subjects like Math, Physics, Programming</div></div>'
+    + '<div class="welcome-card" id="wc2"><div class="wc-icon">✍️</div><div class="wc-title">Rich Notes</div><div class="wc-desc">Headings, code blocks, tables, highlights &amp; more</div></div>'
+    + '<div class="welcome-card" id="wc3"><div class="wc-icon">📥</div><div class="wc-title">Export to PDF</div><div class="wc-desc">Download any unit or entire course as PDF</div></div>'
+    + '<div class="welcome-card" id="wc4"><div class="wc-icon">⏱️</div><div class="wc-title">Study Tools</div><div class="wc-desc">Pomodoro timer, flashcards, progress tracking</div></div>'
+    + '</div></div>';
+  document.getElementById('wc1').addEventListener('click', openCourseModal);
+  document.getElementById('wc2').addEventListener('click', function() { showToast('✍️ Use the toolbar to format: Bold, Headings, Code, Tables!'); });
+  document.getElementById('wc3').addEventListener('click', function() { showToast('📥 Open a unit then click Unit PDF or Course PDF!'); });
+  document.getElementById('wc4').addEventListener('click', function() { showToast('⏱️ Open a unit, then click the Focus button!'); });
+}
+
+function showCourseOverview() {
+  var c = currentCourse;
+  var units = c.units || [];
+  document.getElementById('breadcrumb').innerHTML = '<span>' + (c.icon || '📚') + ' ' + escHtml(c.name) + '</span>';
+
+  var ta = document.getElementById('topbarActions');
+  ta.innerHTML = ''
+    + '<button class="btn-action btn-outline" id="btnDeleteCourse">🗑️</button>'
+    + '<button class="btn-action btn-outline" id="btnAddUnit">+ Unit</button>'
+    + '<button class="btn-action btn-gold" id="btnCoursePdf">📥 Course PDF</button>';
+  document.getElementById('btnDeleteCourse').addEventListener('click', function() { confirmDelete('course', c.id); });
+  document.getElementById('btnAddUnit').addEventListener('click', function() { openUnitModal(c.id); });
+  document.getElementById('btnCoursePdf').addEventListener('click', function() { exportCoursePDF(c.id); });
+
+  var unitCardsHtml = units.map(function(u) {
+    var prog = u.content && u.content.length > 50 ? Math.min(100, Math.round(u.content.length / 20)) : 0;
+    return '<div class="unit-card" data-cid="' + c.id + '" data-uid="' + u.id + '">'
+      + '<div class="uc-icon">' + (u.icon || '📖') + '</div>'
+      + '<div class="uc-name">' + escHtml(u.name) + '</div>'
+      + '<div class="uc-topics">' + escHtml((u.topics || []).join(' · ') || 'No topics yet') + '</div>'
+      + '<div class="uc-progress"><div class="uc-progress-fill" style="width:' + prog + '%"></div></div>'
+      + '</div>';
+  }).join('');
+
+  var ca = document.getElementById('contentArea');
+  ca.innerHTML = ''
+    + '<div class="course-overview">'
+    + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">'
+    + '<span style="font-size:40px;">' + (c.icon || '📚') + '</span>'
+    + '<div class="co-title" style="color:' + c.color + '">' + escHtml(c.name) + '</div>'
+    + '</div>'
+    + '<div style="font-size:13px;color:var(--text3);margin-bottom:24px;">Created ' + new Date(c.created).toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'}) + '</div>'
+    + '<div class="co-stats">'
+    + '<div class="co-stat"><div class="co-stat-num">' + units.length + '</div><div class="co-stat-label">Units / Chapters</div></div>'
+    + '<div class="co-stat"><div class="co-stat-num">' + units.reduce(function(a,u){return a+(u.topics||[]).length;},0) + '</div><div class="co-stat-label">Topics Covered</div></div>'
+    + '<div class="co-stat"><div class="co-stat-num">' + units.filter(function(u){return u.content&&u.content.length>50;}).length + '</div><div class="co-stat-label">Notes Written</div></div>'
+    + '</div>'
+    + '<div class="section-label">Units &amp; Chapters</div>'
+    + '<div class="units-grid">'
+    + unitCardsHtml
+    + '<div class="unit-card add-unit-overview" style="border-style:dashed;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text3);">'
+    + '<div style="font-size:28px;">+</div><div style="font-size:13px;font-weight:600;">Add New Unit</div>'
+    + '</div>'
+    + '</div></div>';
+
+  ca.querySelectorAll('.unit-card[data-uid]').forEach(function(el) {
+    el.addEventListener('click', function() { selectUnit(el.dataset.cid, el.dataset.uid); });
+  });
+  ca.querySelector('.add-unit-overview').addEventListener('click', function() { openUnitModal(c.id); });
+}
+
+function showUnitView() {
+  var c = currentCourse;
+  var u = currentUnit;
+
+  document.getElementById('breadcrumb').innerHTML = ''
+    + '<span id="bcCourse" style="cursor:pointer;">' + (c.icon || '📚') + ' ' + escHtml(c.name) + '</span>'
+    + '<span style="color:var(--text3);padding:0 4px;">/</span>'
+    + '<span>' + (u.icon || '📖') + ' ' + escHtml(u.name) + '</span>';
+  document.getElementById('bcCourse').addEventListener('click', function() { selectCourse(c.id); });
+
+  var ta = document.getElementById('topbarActions');
+  ta.innerHTML = ''
+    + '<button class="btn-action btn-outline" id="btnDeleteUnit">🗑️</button>'
+    + '<button class="btn-action btn-outline" id="btnFocus">⏱️ Focus</button>'
+    + '<button class="btn-action btn-teal" id="btnUnitPdf">📥 Unit PDF</button>'
+    + '<button class="btn-action btn-gold" id="btnCoursePdf2">📥 Course PDF</button>';
+  document.getElementById('btnDeleteUnit').addEventListener('click', function() { confirmDelete('unit', u.id); });
+  document.getElementById('btnFocus').addEventListener('click', togglePomodoro);
+  document.getElementById('btnUnitPdf').addEventListener('click', function() { exportUnitPDF(c.id, u.id); });
+  document.getElementById('btnCoursePdf2').addEventListener('click', function() { exportCoursePDF(c.id); });
+
+  var wc = u.content ? u.content.replace(/<[^>]+>/g, '').trim().split(/\s+/).filter(Boolean).length : 0;
+  var topicsHtml = (u.topics || []).map(function(t) {
+    return '<div class="topic-tag" data-topic="' + escAttr(t) + '">' + escHtml(t)
+      + '<span class="remove-topic" data-topic="' + escAttr(t) + '" style="margin-left:6px;color:var(--text3);font-size:10px;cursor:pointer;">×</span>'
+      + '</div>';
+  }).join('');
+
+  var ca = document.getElementById('contentArea');
+  ca.innerHTML = ''
+    + '<div class="unit-view">'
+    + '<div class="unit-title-bar">'
+    + '<span style="font-size:28px;">' + (u.icon || '📖') + '</span>'
+    + '<div class="unit-title-text">' + escHtml(u.name) + '</div>'
+    + '</div>'
+    + '<div class="unit-meta">'
+    + '<span class="unit-badge badge-purple">📚 ' + escHtml(c.name) + '</span>'
+    + '<span class="unit-badge badge-teal" id="topicCount">' + (u.topics || []).length + ' Topics</span>'
+    + '<span class="unit-badge badge-gold" id="wordBadge">' + wc + ' Words</span>'
+    + '</div>'
+    + '<div class="topics-section">'
+    + '<div class="section-label">📌 Topics</div>'
+    + '<div class="topics-tags" id="topicsTags">'
+    + topicsHtml
+    + '<button class="add-topic-btn" id="btnAddTopic">+ Add Topic</button>'
+    + '</div></div>'
+    + '<div class="editor-container">'
+    + '<div class="editor-toolbar" id="editorToolbar">'
+    + buildToolbar()
+    + '</div>'
+    + '<div class="editor-body" id="noteEditor" contenteditable="true" data-placeholder="Start writing your notes here... Use the toolbar above to format text, add headings, code blocks, and more."></div>'
+    + '<div class="status-bar">'
+    + '<div class="status-saved" id="statusSaved">✓ All changes saved</div>'
+    + '<div style="color:var(--text3);font-size:11px;" id="wordCounter">' + wc + ' words</div>'
+    + '</div></div>'
+    + '<div id="pomodoroWidget" style="display:none;">'
+    + '<div class="pomodoro">'
+    + '<div class="pomo-circle" id="pomoDial">🍅</div>'
+    + '<div class="pomo-info"><div class="pomo-title">🍅 Pomodoro Focus Timer</div><div class="pomo-time" id="pomoTime">25:00</div></div>'
+    + '<div class="pomo-btns">'
+    + '<button class="pomo-btn pomo-start" id="pomoBtn">Start</button>'
+    + '<button class="pomo-btn pomo-reset" id="pomoResetBtn">Reset</button>'
+    + '</div></div></div>'
+    + '<div class="features-grid">'
+    + '<div class="feature-card" id="fcPomo"><div class="fc-icon">⏱️</div><div class="fc-title">Pomodoro Timer</div><div class="fc-desc">25-min focus sessions for productive study</div></div>'
+    + '<div class="feature-card" id="fcTable"><div class="fc-icon">📊</div><div class="fc-title">Insert Table</div><div class="fc-desc">Compare data with structured tables</div></div>'
+    + '<div class="feature-card" id="fcCode"><div class="fc-icon">💻</div><div class="fc-title">Code Block</div><div class="fc-desc">Syntax-highlighted code for any language</div></div>'
+    + '<div class="feature-card" id="fcTemplate"><div class="fc-icon">📝</div><div class="fc-title">Summary Template</div><div class="fc-desc">Quick template for structured notes</div></div>'
+    + '</div></div>';
+
+  // load saved content
+  var editor = document.getElementById('noteEditor');
+  if (u.content) editor.innerHTML = u.content;
+
+  // bind editor events
+  editor.addEventListener('input', onEditorChange);
+  editor.addEventListener('paste', function(e) {
+    e.preventDefault();
+    var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+  });
+
+  // bind toolbar buttons
+  bindToolbar();
+
+  // bind topic events
+  document.getElementById('btnAddTopic').addEventListener('click', openTopicModal);
+  ca.querySelectorAll('.topic-tag').forEach(function(el) {
+    el.addEventListener('click', function() { el.classList.toggle('active'); });
+  });
+  ca.querySelectorAll('.remove-topic').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      removeTopic(el.dataset.topic);
+    });
+  });
+
+  // bind feature cards
+  document.getElementById('fcPomo').addEventListener('click', togglePomodoro);
+  document.getElementById('fcTable').addEventListener('click', insertTable);
+  document.getElementById('fcCode').addEventListener('click', openCodeModal);
+  document.getElementById('fcTemplate').addEventListener('click', insertSummaryTemplate);
+
+  // bind pomodoro
+  document.getElementById('pomoBtn').addEventListener('click', togglePomodoro);
+  document.getElementById('pomoResetBtn').addEventListener('click', resetPomodoro);
+
+  editor.focus();
+}
+
+function buildToolbar() {
+  return '<div class="tb-group">'
+    + '<select class="tb-select" id="tbFormat"><option value="p">Paragraph</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option></select>'
+    + '</div>'
+    + '<div class="tb-group">'
+    + '<button class="tb-btn" id="tbBold" title="Bold"><b>B</b></button>'
+    + '<button class="tb-btn" id="tbItalic" title="Italic"><i>I</i></button>'
+    + '<button class="tb-btn" id="tbUnderline" title="Underline"><u>U</u></button>'
+    + '<button class="tb-btn" id="tbStrike" title="Strikethrough"><s>S</s></button>'
+    + '</div>'
+    + '<div class="tb-group">'
+    + '<button class="tb-btn" id="tbUl" title="Bullet List">• ≡</button>'
+    + '<button class="tb-btn" id="tbOl" title="Numbered List">1≡</button>'
+    + '<button class="tb-btn" id="tbTable" title="Table">⊞</button>'
+    + '<button class="tb-btn" id="tbHr" title="Divider">—</button>'
+    + '</div>'
+    + '<div class="tb-group">'
+    + '<button class="tb-btn" id="tbCode" title="Code Block" style="font-family:JetBrains Mono,monospace;font-size:11px;">&lt;/&gt;</button>'
+    + '<button class="tb-btn" id="tbInlineCode" title="Inline Code" style="font-family:JetBrains Mono,monospace;font-size:11px;">` `</button>'
+    + '</div>'
+    + '<div class="tb-group">'
+    + '<div class="color-btns">'
+    + '<div class="color-btn" id="hlYellow" style="background:#fbbf24" title="Yellow Highlight"></div>'
+    + '<div class="color-btn" id="hlGreen"  style="background:#10b981" title="Green Highlight"></div>'
+    + '<div class="color-btn" id="hlPink"   style="background:#f43f5e" title="Pink Highlight"></div>'
+    + '</div></div>'
+    + '<div class="tb-group">'
+    + '<button class="tb-btn" id="tbUndo" title="Undo">↩</button>'
+    + '<button class="tb-btn" id="tbRedo" title="Redo">↪</button>'
+    + '</div>';
+}
+
+function bindToolbar() {
+  document.getElementById('tbFormat').addEventListener('change', function() {
+    document.execCommand('formatBlock', false, this.value);
+    this.value = 'p';
+    saveEditorContent();
+  });
+  document.getElementById('tbBold').addEventListener('click',        function() { document.execCommand('bold');            saveEditorContent(); });
+  document.getElementById('tbItalic').addEventListener('click',      function() { document.execCommand('italic');          saveEditorContent(); });
+  document.getElementById('tbUnderline').addEventListener('click',   function() { document.execCommand('underline');       saveEditorContent(); });
+  document.getElementById('tbStrike').addEventListener('click',      function() { document.execCommand('strikeThrough');   saveEditorContent(); });
+  document.getElementById('tbUl').addEventListener('click',          function() { document.execCommand('insertUnorderedList'); saveEditorContent(); });
+  document.getElementById('tbOl').addEventListener('click',          function() { document.execCommand('insertOrderedList');   saveEditorContent(); });
+  document.getElementById('tbTable').addEventListener('click',       insertTable);
+  document.getElementById('tbHr').addEventListener('click',          function() { document.execCommand('insertHTML', false, '<hr><p><br></p>'); saveEditorContent(); });
+  document.getElementById('tbCode').addEventListener('click',        openCodeModal);
+  document.getElementById('tbInlineCode').addEventListener('click',  insertInlineCode);
+  document.getElementById('hlYellow').addEventListener('click',      function() { applyHighlight('hl-yellow'); });
+  document.getElementById('hlGreen').addEventListener('click',       function() { applyHighlight('hl-green'); });
+  document.getElementById('hlPink').addEventListener('click',        function() { applyHighlight('hl-pink'); });
+  document.getElementById('tbUndo').addEventListener('click',        function() { document.execCommand('undo'); saveEditorContent(); });
+  document.getElementById('tbRedo').addEventListener('click',        function() { document.execCommand('redo'); saveEditorContent(); });
+}
+
+// ── EDITOR ────────────────────────────────────────────────
+function onEditorChange() {
+  var saved = document.getElementById('statusSaved');
+  if (saved) { saved.textContent = '⏳ Saving...'; saved.style.color = 'var(--gold2)'; }
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(function() {
+    saveEditorContent();
+    var editor = document.getElementById('noteEditor');
+    if (!editor) return;
+    var wc = editor.textContent.trim().split(/\s+/).filter(Boolean).length;
+    var wEl = document.getElementById('wordCounter');
+    var wBadge = document.getElementById('wordBadge');
+    if (wEl) wEl.textContent = wc + ' words';
+    if (wBadge) wBadge.textContent = wc + ' Words';
+    if (saved) { saved.textContent = '✓ All changes saved'; saved.style.color = 'var(--green)'; }
+    updateStats();
+  }, 800);
+}
+
+function saveEditorContent() {
+  if (!currentUnit) return;
+  var editor = document.getElementById('noteEditor');
+  if (!editor) return;
+  currentUnit.content = editor.innerHTML;
+  currentUnit.updated = new Date().toISOString();
+  saveDB();
+}
+
+function applyHighlight(cls) {
+  var sel = window.getSelection();
+  if (!sel || sel.isCollapsed) return;
+  var range = sel.getRangeAt(0);
+  var span = document.createElement('span');
+  span.className = cls;
+  try { range.surroundContents(span); saveEditorContent(); } catch(e) { showToast('Select text first to highlight', true); }
+}
+
+function insertInlineCode() {
+  var sel = window.getSelection();
+  var code = document.createElement('code');
+  if (sel && sel.rangeCount && !sel.isCollapsed) {
+    var range = sel.getRangeAt(0);
+    code.textContent = range.toString();
+    range.deleteContents();
+    range.insertNode(code);
+  } else {
+    code.textContent = 'code here';
+    document.execCommand('insertHTML', false, code.outerHTML);
+  }
+  saveEditorContent();
+}
+
+function insertTable() {
+  var html = '<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead>'
+    + '<tbody><tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>'
+    + '<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr></tbody></table><p><br></p>';
+  document.execCommand('insertHTML', false, html);
+  saveEditorContent();
+}
+
+function insertSummaryTemplate() {
+  var html = '<h1>📌 Summary</h1>'
+    + '<h2>Key Concepts</h2><ul><li>Concept 1</li><li>Concept 2</li></ul>'
+    + '<h2>Important Formulas / Rules</h2><ul><li>Formula 1</li></ul>'
+    + '<h2>Examples</h2><p>Example description...</p>'
+    + '<h2>Quick Revision Points</h2><ol><li>Point 1</li><li>Point 2</li><li>Point 3</li></ol>'
+    + '<blockquote>Key takeaway: ...</blockquote><p><br></p>';
+  var editor = document.getElementById('noteEditor');
+  if (editor) { editor.innerHTML += html; saveEditorContent(); showToast('📝 Template inserted!'); }
+}
+
+// ── COURSE CRUD ───────────────────────────────────────────
+function openCourseModal() {
+  document.getElementById('courseNameInput').value = '';
+  document.getElementById('courseIconInput').value = '🎓';
+  selectedColor = '#7c3aed';
+  document.querySelectorAll('#coursePicker .cp-btn').forEach(function(b) { b.classList.remove('selected'); });
+  document.querySelector('#coursePicker .cp-btn').classList.add('selected');
+  openModal('courseModal');
+  setTimeout(function() { document.getElementById('courseNameInput').focus(); }, 150);
+}
+
+function createCourse() {
+  var name = document.getElementById('courseNameInput').value.trim();
+  var icon = document.getElementById('courseIconInput').value.trim() || '🎓';
+  if (!name) { showToast('Please enter a course name', true); return; }
+  var course = { id: 'c_' + Date.now(), name: name, icon: icon, color: selectedColor, units: [], created: new Date().toISOString() };
+  db.courses.push(course);
+  saveDB();
+  closeModal('courseModal');
+  renderSidebar();
+  selectCourse(course.id);
+  showToast('🎓 Course created: ' + name);
+}
+
+// ── UNIT CRUD ─────────────────────────────────────────────
+function openUnitModal(cid) {
+  pendingCourseId = cid;
+  document.getElementById('unitNameInput').value = '';
+  document.getElementById('unitDescInput').value = '';
+  document.getElementById('unitIconInput').value = '📖';
+  openModal('unitModal');
+  setTimeout(function() { document.getElementById('unitNameInput').focus(); }, 150);
+}
+
+function createUnit() {
+  var name = document.getElementById('unitNameInput').value.trim();
+  var desc = document.getElementById('unitDescInput').value.trim();
+  var icon = document.getElementById('unitIconInput').value.trim() || '📖';
+  if (!name) { showToast('Please enter a unit name', true); return; }
+  var course = db.courses.find(function(c) { return c.id === pendingCourseId; });
+  if (!course) return;
+  var unit = { id: 'u_' + Date.now(), name: name, desc: desc, icon: icon, topics: [], content: '', created: new Date().toISOString() };
+  course.units = course.units || [];
+  course.units.push(unit);
+  saveDB();
+  closeModal('unitModal');
+  currentCourse = course;
+  currentUnit   = unit;
+  renderSidebar();
+  showUnitView();
+  showToast('📖 Unit added: ' + name);
+}
+
+// ── TOPICS ────────────────────────────────────────────────
+function openTopicModal() {
+  document.getElementById('topicInput').value = '';
+  openModal('topicModal');
+  setTimeout(function() { document.getElementById('topicInput').focus(); }, 150);
+}
+
+function addTopic() {
+  var t = document.getElementById('topicInput').value.trim();
+  if (!t) return;
+  currentUnit.topics = currentUnit.topics || [];
+  if (!currentUnit.topics.includes(t)) {
+    currentUnit.topics.push(t);
+    saveDB();
+    var wrap = document.getElementById('topicsTags');
+    var addBtn = document.getElementById('btnAddTopic');
+    var tag = document.createElement('div');
+    tag.className = 'topic-tag';
+    tag.dataset.topic = t;
+    tag.innerHTML = escHtml(t) + '<span class="remove-topic" style="margin-left:6px;color:var(--text3);font-size:10px;cursor:pointer;">×</span>';
+    tag.addEventListener('click', function() { tag.classList.toggle('active'); });
+    tag.querySelector('.remove-topic').addEventListener('click', function(e) { e.stopPropagation(); removeTopic(t); });
+    wrap.insertBefore(tag, addBtn);
+    var tc = document.getElementById('topicCount');
+    if (tc) tc.textContent = currentUnit.topics.length + ' Topics';
+    showToast('🏷️ Topic added: ' + t);
+  }
+  closeModal('topicModal');
+}
+
+function removeTopic(t) {
+  currentUnit.topics = (currentUnit.topics || []).filter(function(x) { return x !== t; });
+  saveDB();
+  var tags = document.querySelectorAll('.topic-tag[data-topic="' + escAttr(t) + '"]');
+  tags.forEach(function(el) { el.remove(); });
+  var tc = document.getElementById('topicCount');
+  if (tc) tc.textContent = currentUnit.topics.length + ' Topics';
+}
+
+// ── CODE BLOCKS ───────────────────────────────────────────
+function openCodeModal() {
+  document.getElementById('codeInput').value = '';
+  openModal('codeModal');
+  setTimeout(function() { document.getElementById('codeInput').focus(); }, 150);
+}
+
+function insertCodeBlock() {
+  var lang = document.getElementById('codeLangInput').value;
+  var code = document.getElementById('codeInput').value;
+  if (!code.trim()) { closeModal('codeModal'); return; }
+  var escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  var html = '<pre><code class="language-' + lang + '">' + escaped + '</code></pre><p><br></p>';
+  document.execCommand('insertHTML', false, html);
+  setTimeout(function() {
+    document.querySelectorAll('#noteEditor pre code:not([data-highlighted])').forEach(function(b) {
+      hljs.highlightElement(b);
+      b.dataset.highlighted = 'yes';
+    });
+    saveEditorContent();
+  }, 100);
+  closeModal('codeModal');
+}
+
+// ── DELETE ────────────────────────────────────────────────
+function confirmDelete(type, id) {
+  document.getElementById('deleteModalText').textContent = type === 'course'
+    ? 'Delete this course and ALL its units? This cannot be undone.'
+    : 'Delete this unit and all its notes? This cannot be undone.';
+  deleteCallback = function() {
+    if (type === 'course') {
+      db.courses = db.courses.filter(function(c) { return c.id !== id; });
+      currentCourse = null; currentUnit = null;
+      saveDB(); renderSidebar(); showWelcome();
+    } else {
+      currentCourse.units = currentCourse.units.filter(function(u) { return u.id !== id; });
+      currentUnit = null;
+      saveDB(); renderSidebar(); showCourseOverview();
+    }
+    showToast('🗑️ Deleted successfully');
+  };
+  openModal('deleteModal');
+  var btn = document.getElementById('deleteConfirmBtn');
+  var newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.addEventListener('click', function() { deleteCallback(); closeModal('deleteModal'); });
+}
+
+// ── POMODORO ──────────────────────────────────────────────
+function togglePomodoro() {
+  var widget = document.getElementById('pomodoroWidget');
+  if (!widget) return;
+  if (widget.style.display === 'none') {
+    widget.style.display = 'block';
+    widget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  var btn = document.getElementById('pomoBtn');
+  if (!pomodoroRunning) {
+    pomodoroRunning = true;
+    if (btn) { btn.textContent = 'Pause'; btn.style.background = 'var(--rose)'; }
+    pomodoroInterval = setInterval(function() {
+      pomodoroSecs--;
+      var timeEl = document.getElementById('pomoTime');
+      if (pomodoroSecs <= 0) {
+        clearInterval(pomodoroInterval);
+        pomodoroRunning = false;
+        pomodoroSecs = 25 * 60;
+        if (btn) { btn.textContent = 'Start'; btn.style.background = 'var(--green)'; }
+        if (timeEl) timeEl.textContent = '25:00';
+        showToast('🍅 Pomodoro done! Take a 5-min break.');
+      } else {
+        var m = String(Math.floor(pomodoroSecs / 60)).padStart(2, '0');
+        var s = String(pomodoroSecs % 60).padStart(2, '0');
+        if (timeEl) timeEl.textContent = m + ':' + s;
+      }
+    }, 1000);
+  } else {
+    clearInterval(pomodoroInterval);
+    pomodoroRunning = false;
+    if (btn) { btn.textContent = 'Resume'; btn.style.background = 'var(--green)'; }
+  }
+}
+
+function resetPomodoro() {
+  clearInterval(pomodoroInterval);
+  pomodoroRunning = false;
+  pomodoroSecs = 25 * 60;
+  var btn = document.getElementById('pomoBtn');
+  var timeEl = document.getElementById('pomoTime');
+  if (btn)    { btn.textContent = 'Start'; btn.style.background = 'var(--green)'; }
+  if (timeEl)  timeEl.textContent = '25:00';
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────
+function exportUnitPDF(cid, uid) {
+  var course = db.courses.find(function(c) { return c.id === cid; });
+  var unit   = course.units.find(function(u) { return u.id === uid; });
+  if (!unit.content || unit.content.replace(/<[^>]+>/g, '').trim().length === 0) {
+    showToast('No content to export!', true); return;
+  }
+  document.getElementById('pdfLoading').classList.remove('hidden');
+  setTimeout(function() {
+    try { generateUnitPDF(course, unit); }
+    catch(e) { showToast('PDF error: ' + e.message, true); }
+    document.getElementById('pdfLoading').classList.add('hidden');
+  }, 100);
+}
+
+function generateUnitPDF(course, unit) {
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+  var pw = doc.internal.pageSize.getWidth();
+  var ph = doc.internal.pageSize.getHeight();
+  var mg = 18;
+  var y  = mg;
+
+  doc.setFillColor(124, 58, 237);
+  doc.rect(0, 0, pw, 26, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  doc.text('Deepak Notes', mg, 11);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  doc.text(course.name + ' \u203a ' + unit.name, mg, 19);
+  doc.text(new Date().toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'}), pw - mg, 19, {align:'right'});
+  y = 36;
+
+  doc.setTextColor(124, 58, 237); doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
+  var titleLines = doc.splitTextToSize(unit.name, pw - 2*mg);
+  doc.text(titleLines, mg, y); y += titleLines.length * 10 + 4;
+
+  if (unit.topics && unit.topics.length) {
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 100, 160);
+    doc.text('Topics: ' + unit.topics.join(' \xb7 '), mg, y); y += 8;
+  }
+  doc.setDrawColor(200, 180, 255); doc.setLineWidth(0.5);
+  doc.line(mg, y, pw - mg, y); y += 8;
+
+  var temp = document.createElement('div');
+  temp.innerHTML = unit.content || '';
+  renderNodesToPDF(doc, temp.childNodes, mg, pw, ph, mg, {y: y});
+
+  var pages = doc.internal.getNumberOfPages();
+  for (var i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+    doc.text('Deepak Notes | ' + unit.name, mg, ph - 7);
+    doc.text(i + '/' + pages, pw - mg, ph - 7, {align: 'right'});
+  }
+  doc.save(course.name + '_' + unit.name + '.pdf');
+  showToast('📥 Unit PDF downloaded!');
+}
+
+function renderNodesToPDF(doc, nodes, mg, pw, ph, leftMg, state) {
+  Array.from(nodes).forEach(function(node) {
+    if (state.y > ph - mg) { doc.addPage(); state.y = mg; }
+    if (node.nodeType === 3) {
+      var txt = node.textContent.trim();
+      if (!txt) return;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+      var lines = doc.splitTextToSize(txt, pw - 2*mg);
+      if (state.y + lines.length * 6 > ph - mg) { doc.addPage(); state.y = mg; }
+      doc.text(lines, mg, state.y); state.y += lines.length * 6 + 2;
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    var tag = node.tagName.toLowerCase();
+    var txt2 = node.textContent.trim();
+    if (tag === 'h1') {
+      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(124,58,237);
+      var l = doc.splitTextToSize(txt2, pw-2*mg);
+      if (state.y+l.length*9 > ph-mg){doc.addPage();state.y=mg;}
+      doc.text(l,mg,state.y); state.y+=l.length*9+5;
+    } else if (tag==='h2') {
+      doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(6,182,212);
+      var l2=doc.splitTextToSize(txt2,pw-2*mg);
+      if(state.y+l2.length*7>ph-mg){doc.addPage();state.y=mg;}
+      doc.text(l2,mg,state.y); state.y+=l2.length*7+4;
+    } else if (tag==='h3') {
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(245,158,11);
+      var l3=doc.splitTextToSize(txt2,pw-2*mg);
+      if(state.y+l3.length*6>ph-mg){doc.addPage();state.y=mg;}
+      doc.text(l3,mg,state.y); state.y+=l3.length*6+3;
+    } else if (tag==='p') {
+      if(!txt2){state.y+=3;return;}
+      doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(40,40,40);
+      var l4=doc.splitTextToSize(txt2,pw-2*mg);
+      if(state.y+l4.length*6>ph-mg){doc.addPage();state.y=mg;}
+      doc.text(l4,mg,state.y); state.y+=l4.length*6+3;
+    } else if (tag==='blockquote') {
+      var l5=doc.splitTextToSize(txt2,pw-2*mg-10);
+      var bh=l5.length*6+10;
+      if(state.y+bh>ph-mg){doc.addPage();state.y=mg;}
+      doc.setDrawColor(124,58,237); doc.setLineWidth(2);
+      doc.line(mg,state.y-3,mg,state.y+bh-5);
+      doc.setFont('helvetica','italic'); doc.setFontSize(11); doc.setTextColor(100,70,160);
+      doc.text(l5,mg+6,state.y+2); state.y+=bh+2;
+    } else if (tag==='pre'||tag==='code') {
+      var l6=doc.splitTextToSize(node.textContent,pw-2*mg-10);
+      var bh2=l6.length*5+12;
+      if(state.y+bh2>ph-mg){doc.addPage();state.y=mg;}
+      doc.setFillColor(30,30,46);
+      doc.roundedRect(mg,state.y-4,pw-2*mg,bh2,2,2,'F');
+      doc.setFont('courier','normal'); doc.setFontSize(9); doc.setTextColor(200,210,255);
+      doc.text(l6,mg+5,state.y+3); state.y+=bh2+4;
+    } else if (tag==='ul'||tag==='ol') {
+      var idx=1;
+      node.querySelectorAll('li').forEach(function(li){
+        var t=(tag==='ol'?idx+'. ':'• ')+li.textContent.trim();
+        doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(40,40,40);
+        var l7=doc.splitTextToSize(t,pw-2*mg-8);
+        if(state.y+l7.length*6>ph-mg){doc.addPage();state.y=mg;}
+        doc.text(l7,mg+6,state.y); state.y+=l7.length*6+1; idx++;
+      }); state.y+=4;
+    } else if (tag==='table') {
+      var headers=Array.from(node.querySelectorAll('th')).map(function(th){return th.textContent.trim();});
+      var rows=Array.from(node.querySelectorAll('tbody tr')).map(function(tr){return Array.from(tr.querySelectorAll('td')).map(function(td){return td.textContent.trim();});});
+      var cw=(pw-2*mg)/Math.max(headers.length,1);
+      if(headers.length){
+        if(state.y+12>ph-mg){doc.addPage();state.y=mg;}
+        doc.setFillColor(124,58,237);
+        doc.rect(mg,state.y-5,pw-2*mg,10,'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+        headers.forEach(function(h,i){doc.text(h.substring(0,16),mg+i*cw+3,state.y+1);});
+        state.y+=8;
+      }
+      rows.forEach(function(row,ri){
+        if(ri%2===0){doc.setFillColor(248,246,255);doc.rect(mg,state.y-5,pw-2*mg,8,'F');}
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(40,40,40);
+        row.forEach(function(cell,i){doc.text(cell.substring(0,20),mg+i*cw+3,state.y);});
+        state.y+=7;
+        if(state.y>ph-mg){doc.addPage();state.y=mg;}
+      }); state.y+=6;
+    } else if (tag==='hr') {
+      doc.setDrawColor(200,180,255); doc.setLineWidth(0.5);
+      doc.line(mg,state.y,pw-mg,state.y); state.y+=6;
+    } else {
+      renderNodesToPDF(doc, node.childNodes, mg, pw, ph, leftMg, state);
+    }
+  });
+}
+
+function exportCoursePDF(cid) {
+  var course = db.courses.find(function(c){return c.id===cid;});
+  var units  = (course.units||[]).filter(function(u){return u.content&&u.content.replace(/<[^>]+>/g,'').trim().length>0;});
+  if (!units.length) { showToast('No notes to export!', true); return; }
+  document.getElementById('pdfLoading').classList.remove('hidden');
+  setTimeout(function() {
+    try {
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+      var pw=doc.internal.pageSize.getWidth(), ph=doc.internal.pageSize.getHeight(), mg=18;
+
+      // cover
+      doc.setFillColor(14,14,22); doc.rect(0,0,pw,ph,'F');
+      doc.setFillColor(124,58,237); doc.rect(0,ph/2-50,pw,100,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(26);
+      var cl=doc.splitTextToSize(course.name,pw-40);
+      doc.text(cl,pw/2,ph/2-15,{align:'center'});
+      doc.setFontSize(12); doc.setFont('helvetica','normal');
+      doc.text(units.length+' Units  \xb7  Deepak Notes',pw/2,ph/2+10,{align:'center'});
+      doc.setFontSize(10);
+      doc.text(new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}),pw/2,ph/2+22,{align:'center'});
+
+      // TOC
+      doc.addPage();
+      doc.setFillColor(124,58,237); doc.rect(0,0,pw,20,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(14);
+      doc.text('Table of Contents', mg, 14);
+      var ty=32;
+      units.forEach(function(u,i){
+        doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(40,40,40);
+        doc.text((i+1)+'. '+u.name, mg+4, ty);
+        if(u.topics&&u.topics.length){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(u.topics.join(' \xb7 '),mg+10,ty+5);ty+=14;}
+        else ty+=9;
+      });
+
+      units.forEach(function(unit){
+        doc.addPage();
+        doc.setFillColor(124,58,237); doc.rect(0,0,pw,22,'F');
+        doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(13);
+        var ul=doc.splitTextToSize(unit.name,pw-2*mg);
+        doc.text(ul,mg,14);
+        var state={y:34};
+        var temp=document.createElement('div');
+        temp.innerHTML=unit.content||'';
+        renderNodesToPDF(doc,temp.childNodes,mg,pw,ph,mg,state);
+      });
+
+      var pages=doc.internal.getNumberOfPages();
+      for(var i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Deepak Notes | '+course.name,mg,ph-7);doc.text(i+'/'+pages,pw-mg,ph-7,{align:'right'});}
+      doc.save(course.name+'_Complete.pdf');
+      showToast('📥 Course PDF downloaded!');
+    } catch(e) { showToast('PDF error: '+e.message, true); }
+    document.getElementById('pdfLoading').classList.add('hidden');
+  }, 100);
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function showToast(msg, isError) {
+  var t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() {
+    t.style.opacity = '0'; t.style.transition = 'opacity 0.3s';
+    setTimeout(function() { t.remove(); }, 300);
+  }, 2600);
+}
+
+// ── DEMO SEED ─────────────────────────────────────────────
+function seedDemoIfEmpty() {
+  if (db.courses.length > 0) return;
+  db.courses.push({
+    id:'c_demo', name:'Data Structures & Algorithms', icon:'💡', color:'#7c3aed',
+    created: new Date().toISOString(),
+    units:[
+      {
+        id:'u_demo1', name:'Chapter 1: Arrays', icon:'📐', desc:'Fundamentals of arrays',
+        topics:['Time Complexity','Space Complexity','Searching','Sorting'],
+        created: new Date().toISOString(),
+        content:'<h1>📌 Introduction to Arrays</h1><p>An array is a linear data structure that stores elements in contiguous memory locations. It is one of the most fundamental data structures in computer science.</p><h2>Key Properties</h2><ul><li><strong>Fixed Size:</strong> Arrays have a fixed size once declared.</li><li><strong>Indexed Access:</strong> Elements are accessed using zero-based indexing.</li><li><strong>Contiguous Memory:</strong> All elements are stored in adjacent memory locations.</li></ul><h2>Time Complexity Table</h2><table><thead><tr><th>Operation</th><th>Best</th><th>Average</th><th>Worst</th></tr></thead><tbody><tr><td>Access</td><td>O(1)</td><td>O(1)</td><td>O(1)</td></tr><tr><td>Search</td><td>O(1)</td><td>O(n)</td><td>O(n)</td></tr><tr><td>Insert</td><td>O(1)</td><td>O(n)</td><td>O(n)</td></tr><tr><td>Delete</td><td>O(1)</td><td>O(n)</td><td>O(n)</td></tr></tbody></table><h2>Example Code</h2><pre><code class="language-python"># Array in Python\narr = [1, 2, 3, 4, 5]\n\n# Access element at index 2\nprint(arr[2])  # Output: 3\n\n# Iterate\nfor element in arr:\n    print(element)</code></pre><blockquote>Remember: Arrays provide O(1) random access but O(n) insertion and deletion (except at end).</blockquote>'
+      },
+      { id:'u_demo2', name:'Chapter 2: Linked Lists', icon:'🔗', desc:'Singly and doubly linked lists', topics:['Pointers','Traversal','Reversal'], created: new Date().toISOString(), content:'' }
+    ]
+  });
+  saveDB();
+}
+
+// ── START ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
